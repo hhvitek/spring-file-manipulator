@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:./src/main/resources/db/db.sqlite3
+    driver-class-name: org.sqlite.JDBC
+    username:
+    password:
+    platform: sqlite
+    initialization-mode: always
+    hikari:
+      data-source-properties:
+        foreign_keys: true
+      connection-init-sql: PRAGMA busy_timeout=1111;
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      indent_output: true
+  jpa:
+    database-platform: org.hibernate.dialect.SQLiteDialect
+    show-sql: true
+    properties:
+      javax:
+        persistence:
+          query:
+            timeout: 1111
+    hibernate:
+      ddl-auto: validate
+  messages:
+    basename: i18n/messages
+server:
+  error:
+    include-message: always
+    include-stacktrace: always
+    include-exception: true
+    whitelabel:
+      enabled: false
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /api-ui.html
+
+custom-properties:
+  array-of-endpoint-urls:
+    - /api/file_regex_predefined_categories
+    - /api/file_operations
+    - /api/settings
+    - /api/string_operation
+    - /api/tasks
+
+
+
