@@ -28,12 +28,16 @@ public class WorkerManagerImpl implements WorkerManager {
     public WorkerManagerImpl(final ThreadPoolTaskScheduler taskScheduler) {
         this.taskScheduler = taskScheduler;
 
-        int cpus = Runtime.getRuntime().availableProcessors();
-        log.info("Cpus: {}", cpus);
-        taskScheduler.setPoolSize(cpus);
+        setTaskSchedulerPoolToNumberOfProcessors(taskScheduler);
 
         Runnable scheduledRepeatedTaskRunnable = this::scheduledRepeatedTask;
         taskScheduler.scheduleWithFixedDelay(scheduledRepeatedTaskRunnable, SCHEDULED_REPEATABLE_DELAY_IN_MILLIS);
+    }
+
+    private void setTaskSchedulerPoolToNumberOfProcessors(ThreadPoolTaskScheduler taskScheduler) {
+        int cpus = Runtime.getRuntime().availableProcessors();
+        log.info("Number of cpus: {}", cpus);
+        taskScheduler.setPoolSize(cpus);
     }
 
     @Override
@@ -92,7 +96,7 @@ public class WorkerManagerImpl implements WorkerManager {
         Worker worker = workerManagerOneWorkerItem.getWorker();
         worker.stop();
 
-        CompletableFuture future = workerManagerOneWorkerItem.getCompletableFuture();
+        CompletableFuture<Object> future = workerManagerOneWorkerItem.getCompletableFuture();
         future.cancel(false); // bool does not have any effect
     }
 
@@ -100,7 +104,7 @@ public class WorkerManagerImpl implements WorkerManager {
      * Repeatable scheduled task, anything???
      */
     private void scheduledRepeatedTask() {
-        log.info("Scheduled Task executed!!!! No tasks: {}", workerIdToOneWorkerItem.size());
+        //log.info("Scheduled Tasks repeatable thread executed!!!! Number of tasks: {}", workerIdToOneWorkerItem.size());
 
         synchronized (workerIdToOneWorkerItem) {
             for (Map.Entry<Integer, WorkerManagerOneWorkerItem> entry: workerIdToOneWorkerItem.entrySet()) {

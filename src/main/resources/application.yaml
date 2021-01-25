@@ -26,6 +26,7 @@ spring:
       ddl-auto: validate
   messages:
     basename: i18n/messages
+
 server:
   error:
     include-message: always
@@ -47,6 +48,3 @@ custom-properties:
     - /api/settings
     - /api/string_operation
     - /api/tasks
-
-
-

@@ -10,5 +10,5 @@ import java.util.concurrent.CompletableFuture;
 public class WorkerManagerOneWorkerItem {
     private final int workerId;
     private final Worker worker;
-    private final CompletableFuture completableFuture;
+    private final CompletableFuture<Object> completableFuture;
 }
