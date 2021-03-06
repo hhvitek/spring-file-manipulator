@@ -16,6 +16,8 @@ public class FileRegexPredefinedCategoryEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    // unique may cause exception, when new table is created in the sqlite
+    // this issue should be resolved by updating sqlite-dialect library to 0.1.2+ version
     @NonNull
     @NotBlank(message = "!uniqueNameId! is mandatory.")
     @Column(nullable = false, unique = true)
