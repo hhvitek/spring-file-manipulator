@@ -7,7 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import spring.filemanipulator.entity.FileRegexPredefinedCategoryEntity;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +28,7 @@ public class FileRegexPredefinedCategoryRepositoryTest {
 
     @Test
     public void repositoryContainsTwoRecordsAfterInitialization() {
-        List<FileRegexPredefinedCategoryEntity> fileRegexEntities = repository.findAll();
+        Collection<FileRegexPredefinedCategoryEntity> fileRegexEntities = repository.findAll();
 
         int expectedRecordsCount = 2;
         assertThat(fileRegexEntities).hasSize(expectedRecordsCount);
