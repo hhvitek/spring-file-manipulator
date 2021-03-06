@@ -1,0 +1,102 @@
+@startuml
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Aqua-CadetBlue
+
+'skinparam genericDisplay old
+
+title Create Task
+
+class TaskController {
+    -taskService
+    +create(UrlParametersDTO): TaskEntity
+}
+
+note left of TaskController::create
+    -URL parameters syntactically
+    validated by Spring.
+    -Parameters DTO is created by Spring
+    -Passed to TaskService
+end note
+
+interface Job {
+    +start(): Object
+    +stop()
+}
+
+class TaskService {
+    -taskRepository: TaskRepository
+    -taskScheduler: TaskScheduler
+
+    +create(UrlParametersDTO): TaskEntity
+    +isFinished(taskId): boolean
+    +signalToStop(taskId): void
+}
+
+note left of TaskService::create
+    -Semantic manual validation
+    -Creating TaskEntity from DTO
+    -Passed to TaskScheduler
+end note
+
+TaskController o-- TaskService
+TaskService o-- TaskScheduler
+
+class TaskJob implements Job
+
+class TaskJobCreatorFactory {
+    +createTaskJobFromTaskEntity(TaskEntity): TaskJob
+}
+
+TaskJobCreatorFactory ..> TaskJob : creates
+
+
+class TaskScheduler {
+    -taskJobCreatorFactory: TaskJobCreatorFactory
+    -taskRepository: TaskRepository
+    -jobService: JobService
+
+    +schedule(TaskEntity): void
+    +signalToStop(taskId): void
+}
+
+note left of TaskScheduler::schedule
+    -Creating TaskEntity from DTO
+    -Creating TaskJob from TaskEntity
+    using relevant TaskJobFactory
+    -Passed to JobScheduler
+end note
+
+class JobService {
+    -jobRepository: JobRepository
+    -jobScheduler: JobScheduler
+    +schedule(Job): JobEntity
+    +signalToStop(jobId): void
+}
+
+note left of JobService::schedule
+    -Creating JobEntity and
+    storing into database
+    -Passing both
+    Job and JobEntity
+    to JobScheduler
+end note
+
+TaskScheduler o-- JobService
+
+class JobScheduler {
+    -jobRepository: JobRepository
+    +schedule(JobEntity, Job): void
+    +signalToStop(jobId): void
+}
+
+note left of JobScheduler::schedule
+    -Schedules execution of Job::start() method
+    -Gradually stores any Job status changes
+    (running, finished_ok, finished_error, ...)
+end note
+
+JobService o-- JobScheduler
+
+@enduml

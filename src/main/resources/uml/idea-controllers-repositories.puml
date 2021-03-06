@@ -1,0 +1,61 @@
+@startuml
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Aqua-CadetBlue
+
+'skinparam genericDisplay old
+
+title Abstract Controllers
+
+abstract class AbstractRestController<Entity, ID> {
+    #repository: AbstractRepository
+
+    #AbstractRestController(AbstractRepository)
+
+    +getAll(): Collection<Entity>
+    +getOneByIdIfNotFoundThrow(ID)
+    +createOne(@RequestBody Entity)
+}
+
+abstract class AbstractSearchableRestController<Entity, ID> extends AbstractRestController {
+    #searchableRepository: AbstractSearchableRepository
+
+    #AbstractSearchableRestController(AbstractSearchableRepository)
+
+    +getManyBySearchFilter(@RequestParam String urlFilters)
+}
+
+note left of AbstractSearchableRestController
+    To allows filtering using
+    request endpoint url parameters:
+    url...path.../search?filter=field:value
+end note
+
+class TaskController<TaskEntity, Integer> extends AbstractSearchableRestController {
+    -taskService: TaskService
+}
+
+interface AbstractRepository<Entity, ID> extends CrudRepository {
+    +findAll(): Collection<Entity>
+}
+
+interface AbstractSearchableRepository<Entity, ID> extends AbstractRepository, JpaSpecificationExecutor
+
+note right of AbstractSearchableRepository
+    To allow execution of Specifications
+    based on JPA criteria API.
+    findAll(Specification)
+end note
+
+interface TaskRepository<TaskEntity, Integer> extends AbstractSearchableRepository {
+    +findByIdIfNotFoundThrow(Integer)
+}
+
+
+
+AbstractRestController o-- AbstractRepository : contains
+AbstractSearchableRestController o-- AbstractSearchableRepository : contains
+
+
+@enduml
