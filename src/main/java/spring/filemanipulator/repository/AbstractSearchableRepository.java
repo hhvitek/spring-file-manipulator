@@ -5,6 +5,13 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 import java.io.Serializable;
 
-@NoRepositoryBean
-public interface AbstractSearchableRepository<ID extends Serializable, E extends Serializable> extends AbstractRepository<ID, E>, JpaSpecificationExecutor<E> {
+/**
+ * JpaSpecificationExecutor
+ * Interface to allow execution of Specifications based on JPA criteria API.
+ *
+ * @see <a href="https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaSpecificationExecutor.html">JpaSpecificationExecutor</a>
+ */
+
+@NoRepositoryBean // dont generate implementation
+public interface AbstractSearchableRepository<Entity extends Serializable, ID extends Serializable> extends AbstractRepository<Entity, ID>, JpaSpecificationExecutor<Entity> {
 }
