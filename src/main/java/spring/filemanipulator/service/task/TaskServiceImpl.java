@@ -2,54 +2,59 @@ package spring.filemanipulator.service.task;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import spring.filemanipulator.entity.TaskEntity;
 import spring.filemanipulator.repository.TaskRepository;
+import spring.filemanipulator.service.task.manager.TaskEntityCreator;
+import spring.filemanipulator.service.task.manager.TaskScheduler;
+import spring.filemanipulator.service.task.status.TaskStatusI18nNamedServiceService;
+import spring.filemanipulator.service.task.validator.CreateTaskParametersDTO;
 
 @Slf4j
-@Service("task-service")
-@Primary
+@Service
 public class TaskServiceImpl implements TaskService {
+
+    private final TaskEntityCreator taskEntityCreator;
+
+    private final TaskScheduler taskScheduler;
 
     private final TaskRepository taskRepository;
 
-    private final TaskStatusService taskStatusService;
-
-    private final TaskManager taskManager;
+    private final TaskStatusI18nNamedServiceService taskStatusI18nNamedServiceService;
 
 
     @Autowired
-    public TaskServiceImpl(final TaskRepository taskRepository,
-                           final TaskStatusService taskStatusService,
-                           final TaskManager taskManager) {
+    public TaskServiceImpl(
+            final TaskEntityCreator taskEntityCreator,
+            final TaskScheduler taskScheduler,
+            final TaskRepository taskRepository,
+            final TaskStatusI18nNamedServiceService taskStatusI18nNamedServiceService) {
+        this.taskEntityCreator = taskEntityCreator;
+        this.taskScheduler = taskScheduler;
         this.taskRepository = taskRepository;
-        this.taskStatusService = taskStatusService;
-        this.taskManager = taskManager;
+        this.taskStatusI18nNamedServiceService = taskStatusI18nNamedServiceService;
     }
 
-
     @Override
-    public TaskEntity createTask(CreateTaskParametersDTO dto) throws InvalidCreateTaskParametersException {
-
-        TaskEntity taskEntity = taskManager.schedule(dto);
-
+    public TaskEntity createAndSchedule(CreateTaskParametersDTO dto) throws InvalidCreateTaskParametersException {
+        TaskEntity taskEntity = taskEntityCreator.createAndStore(dto);
+        taskScheduler.scheduleAndStore(taskEntity);
         return taskEntity;
     }
 
     @Override
-    public TaskEntity createTaskUsingSettings() throws InvalidCreateTaskParametersException {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public boolean isFinished(Integer taskId) throws TaskNotFoundException {
+        TaskEntity taskEntity = taskRepository.findByIdIfNotFoundThrow(taskId);
+
+        String taskStatusUniqueNameId = taskEntity.getTaskStatusUniqueNameId();
+
+        return taskStatusI18nNamedServiceService.isNameConsideredFinished(taskStatusUniqueNameId);
     }
 
     @Override
-    public TaskEntity getTaskById(Integer taskId) throws TaskNotFoundException {
-        return taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException(taskId));
+    public void signalToStop(Integer taskId) throws TaskNotFoundException {
+        taskScheduler.signalToStop(taskId);
     }
 
-    @Override
-    public void stopTaskById(Integer taskId) throws TaskNotFoundException {
-        taskManager.stop(taskId);
-    }
+
 }
