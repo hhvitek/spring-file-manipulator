@@ -1,5 +1,6 @@
 package spring.filemanipulator.specificationapi;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -17,7 +18,7 @@ public class CustomSpecification<E extends Serializable> implements Specificatio
     }
 
     @Override
-    public Predicate toPredicate(final Root<E> root, final CriteriaQuery<?> query, final CriteriaBuilder builder) {
+    public Predicate toPredicate(final @NotNull Root<E> root, final @NotNull CriteriaQuery<?> query, final @NotNull CriteriaBuilder builder) {
         switch (criteria.getOperation()) {
             case EQUALITY:
                 return builder.equal(root.get(criteria.getKey()), criteria.getValue());
