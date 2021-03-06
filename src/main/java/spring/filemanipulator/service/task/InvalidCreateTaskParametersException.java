@@ -7,7 +7,7 @@ import org.springframework.validation.Errors;
 @Getter
 public class InvalidCreateTaskParametersException extends RuntimeException {
 
-    private Errors errors;
+    private final Errors errors;
 
     public InvalidCreateTaskParametersException(@NotNull Errors errors) {
         super("Invalid task parameters. Errors count: " + errors.getErrorCount());
