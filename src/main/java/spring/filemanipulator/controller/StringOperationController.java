@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @RestController
-@RequestMapping("/api/string_operation")
+@RequestMapping("/api/string_operations")
 public class StringOperationController {
 
     @GetMapping

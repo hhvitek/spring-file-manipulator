@@ -11,33 +11,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Controller could subclass this class.
+ * Any controller may extends this class.
  * Contains common meaningful methods to get entities from database
- * using repository directly.
+ * This abstract class is using repository directly.
  */
-public abstract class AbstractRestController<ID extends Serializable, E extends Serializable> {
+public abstract class AbstractRestController<Entity extends Serializable, ID extends Serializable> {
 
-    protected final AbstractRepository<ID, E> repository;
+    protected final AbstractRepository<Entity, ID> repository;
 
-    protected AbstractRestController(AbstractRepository<ID, E> repository) {
+    protected AbstractRestController(AbstractRepository<Entity, ID> repository) {
         this.repository = repository;
     }
 
     @GetMapping
-    public Collection<E> getAll() {
+    public Collection<Entity> getAll() {
         return new ArrayList<>(repository.findAll());
 
     }
 
     @GetMapping("/{id:\\d+}")
-    public E getOneById(@PathVariable ID id) {
+    public Entity findByIdIfNotFoundThrow(@PathVariable ID id) throws ItemNotFoundException {
         return repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public E createOne(@Valid @RequestBody E newOne) {
+    public Entity createOne(@Valid @RequestBody Entity newOne) {
         return repository.save(newOne);
     }
 

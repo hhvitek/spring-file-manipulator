@@ -7,7 +7,7 @@ import spring.filemanipulator.repository.SettingsRepository;
 
 @RestController
 @RequestMapping("/api/settings")
-public class SettingsController extends AbstractRestController<Integer, SettingsEntity> {
+public class SettingsController extends AbstractRestController<SettingsEntity, Integer> {
 
     public SettingsController(SettingsRepository repository) {
         super(repository);

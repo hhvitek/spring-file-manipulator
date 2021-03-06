@@ -7,7 +7,7 @@ import spring.filemanipulator.repository.FileRegexPredefinedCategoryRepository;
 
 @RestController
 @RequestMapping("/api/file_regex_predefined_categories")
-public class FileRegexPredefinedCategoryController extends AbstractSearchableRestController<Integer, FileRegexPredefinedCategoryEntity> {
+public class FileRegexPredefinedCategoryController extends AbstractSearchableRestController<FileRegexPredefinedCategoryEntity, Integer> {
 
     public FileRegexPredefinedCategoryController(FileRegexPredefinedCategoryRepository repository) {
         super(repository);
