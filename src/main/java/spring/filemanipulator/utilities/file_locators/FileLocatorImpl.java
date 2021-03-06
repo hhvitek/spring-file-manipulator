@@ -88,11 +88,11 @@ public class FileLocatorImpl implements IFileLocator {
 
 
     @Override
-    public List<Path> listAllFiles(@NotNull Path rootFolder) throws FileLocatorException {
+    public @NotNull List<Path> listAllFiles(@NotNull Path rootFolder) throws FileLocatorException {
         this.rootFolder = rootFolder;
 
         try (Stream<Path> foundFiles =
-                     findFilesFromRootFolderRecursivelyUsingPathMatcher(rootFolder, PATH_MATCHER_ANY_FILE);
+                     findFilesFromRootFolderRecursivelyUsingPathMatcher(rootFolder, PATH_MATCHER_ANY_FILE)
         ) {
             return foundFiles.collect(Collectors.toList());
         }

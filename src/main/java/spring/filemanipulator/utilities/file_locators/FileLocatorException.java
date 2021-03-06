@@ -8,7 +8,7 @@ public class FileLocatorException extends RuntimeException {
         super(message);
     }
 
-    public FileLocatorException(Throwable throwable) {
-        super(throwable);
+    public FileLocatorException(Throwable cause) {
+        super(cause);
     }
 }

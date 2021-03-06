@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 @Primary
 public class FileLocatorApacheCommons implements IFileLocator {
 
-    private Path rootFolder;
-
     @Override
     public @NotNull List<Path> findUsingRegex(@NotNull Path rootFolder, @NotNull String fileRegex) {
         Collection<File> foundFiles = FileUtils.listFiles(
@@ -36,7 +34,7 @@ public class FileLocatorApacheCommons implements IFileLocator {
     }
 
     @Override
-    public List<Path> listAllFiles(@NotNull Path rootFolder) throws FileLocatorException {
+    public @NotNull List<Path> listAllFiles(@NotNull Path rootFolder) throws FileLocatorException {
         Collection<File> foundFiles = FileUtils.listFiles(rootFolder.toFile(), null, true);
         return convertCollectionOfFilesIntoListOfPaths(foundFiles);
     }
