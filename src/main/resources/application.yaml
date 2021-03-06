@@ -9,21 +9,28 @@ spring:
     hikari:
       data-source-properties:
         foreign_keys: true
-      connection-init-sql: PRAGMA busy_timeout=1111;
+      connection-init-sql: PRAGMA busy_timeout=1111; PRAGMA journal_mode=WAL;
+#      maximum-pool-size: 1
   jackson:
     property-naming-strategy: SNAKE_CASE
     serialization:
       indent_output: true
+      fail-on-empty-beans: false
   jpa:
-    database-platform: org.hibernate.dialect.SQLiteDialect
-    show-sql: true
+    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+#    show-sql: true
     properties:
       javax:
         persistence:
           query:
             timeout: 1111
+      hibernate:
+#        hql:
+#          bulk_id_strategy: org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy
+        format_sql: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+
   messages:
     basename: i18n/messages
 
@@ -32,8 +39,6 @@ server:
     include-message: always
     include-stacktrace: always
     include-exception: true
-    whitelabel:
-      enabled: false
 
 springdoc:
   api-docs:
@@ -43,8 +48,9 @@ springdoc:
 
 custom-properties:
   array-of-endpoint-urls:
+    - /api
     - /api/file_regex_predefined_categories
     - /api/file_operations
     - /api/settings
-    - /api/string_operation
+    - /api/string_operations
     - /api/tasks
