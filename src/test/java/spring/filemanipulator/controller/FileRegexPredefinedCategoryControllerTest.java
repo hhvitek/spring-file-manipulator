@@ -3,13 +3,14 @@ package spring.filemanipulator.controller;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import spring.filemanipulator.controller.error.ErrorsHelperMethods;
+import spring.filemanipulator.controller.error.RestExceptionHandlerAdvice;
 import spring.filemanipulator.entity.FileRegexPredefinedCategoryEntity;
 import spring.filemanipulator.repository.FileRegexPredefinedCategoryRepository;
 
@@ -17,14 +18,17 @@ import java.util.Arrays;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@WebMvcTest(controllers = {FileRegexPredefinedCategoryController.class})
+@WebMvcTest(controllers = {FileRegexPredefinedCategoryController.class, RestExceptionHandlerAdvice.class})
 class FileRegexPredefinedCategoryControllerTest {
 
-    @Value("${custom-properties.array-of-endpoint-urls[0]}")
-    private String endpointUrl;
+    private static String CATEGORY_ENDPOINT_URL = "/api/file_regex_predefined_categories";
 
     @MockBean
-    private FileRegexPredefinedCategoryRepository repository;
+    private FileRegexPredefinedCategoryRepository repository; // mock behaviour must be defined
+
+    @MockBean
+    private ErrorsHelperMethods errorsHelperMethods; // required by RestExceptionHandlerAdvice, no specific behaviour required, just mock
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -41,7 +45,7 @@ class FileRegexPredefinedCategoryControllerTest {
 
         mockMvc.perform(
                 MockMvcRequestBuilders
-                        .get(endpointUrl)
+                        .get(CATEGORY_ENDPOINT_URL)
                         .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())

@@ -21,19 +21,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 // cannot use @WebMvcMock because internal default spring boot error handling...
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-class GeneralRestEndpointsTest {
+class GeneralRestEndpointWithErrorsTest {
 
+    // faked http, direct method call, no network
+    // also no redirection (aka /error endpoint)
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private FileRegexPredefinedCategoryRepository fileRegexPredefinedCategoryRepository;
 
+    // whole context
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -65,7 +69,7 @@ class GeneralRestEndpointsTest {
 
     @Test
     public void getOneByIdExistingReturns200() throws Exception {
-        String url = endpointsUrls.get(0) + "/1";
+        String url = "/api/tasks" + "/1";
         mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -74,16 +78,17 @@ class GeneralRestEndpointsTest {
 
     @Test
     public void getOneByIdNonFoundReturns404() throws Exception {
-        String url = endpointsUrls.get(0) + "/2";
+        String url = "/api/tasks" + "/99";
         mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status_code").value(404));
     }
 
+    // cannot use mockMvc - do not support redirection
     @Test
     public void getOneByIdInvalidUrlParameterReturns404Test() throws Exception {
-        String url = endpointsUrls.get(0) + "/x2x";
+        String url = "/api/tasks" + "/x2x";
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -91,14 +96,49 @@ class GeneralRestEndpointsTest {
         assertThat(response.getBody()).contains("\"status_code\" : 404"); // why additional space around " : "?
     }
 
+    // cannot use mockMvc - do not support redirection
     @Test
-    public void unknownEndpointReturns404Test() throws Exception {
+    public void unknownEndpointReturns404Test() {
         String unknownEndpoint = "/custom/unknown";
 
         ResponseEntity<String> response = restTemplate.getForEntity(unknownEndpoint, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
         assertThat(response.getBody()).contains("\"status_code\" : 404"); // why additional space around " : "?
+    }
+
+    // cannot use mockMvc - do not support redirection
+    @Test
+    public void unknownEndpointContainsCorrectApiPath() {
+        String unknownEndpoint = "/custom/unknown";
+
+        ResponseEntity<String> response = restTemplate.getForEntity(unknownEndpoint, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+        assertThat(response.getBody()).contains("\"status_code\" : 404"); // why additional space around " : "?
+        assertThat(response.getBody()).contains("\"api_path\" : \"" + unknownEndpoint + "\""); // why additional space around " : "?
+    }
+
+    @Test
+    public void methodNotAllowedTest() throws Exception {
+        String existingUrl = "/api/tasks";
+
+        mockMvc.perform(delete(existingUrl).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status_code").value(405))
+                .andExpect(jsonPath("$.api_path").value(existingUrl))
+                .andExpect(jsonPath("$.error_message").value("HttpRequestMethodNotSupportedException: Request method 'DELETE' not supported"))
+                .andExpect(jsonPath("$.error_message_detail").doesNotExist());
+    }
+
+    @Test
+    public void callErrorEndpointDirectlyTest() throws Exception {
+        String url = "/error";
+        mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status_code").value(400));
     }
 
 }

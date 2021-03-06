@@ -30,11 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class SearchableRestEndpointsTest {
 
-    @MockBean
+    @Autowired
     private FileRegexPredefinedCategoryRepository repository;
 
-    @Value("${custom-properties.array-of-endpoint-urls[0]}")
-    private String endpointUrl;
+    private static String CATEGORY_ENDPOINT_URL = "/api/file_regex_predefined_categories";
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,7 +42,7 @@ class SearchableRestEndpointsTest {
     private TestRestTemplate restTemplate;
 
 
-    @BeforeEach
+/*    @BeforeEach
     public void init() {
         FileRegexPredefinedCategoryEntity entity1 = new FileRegexPredefinedCategoryEntity("name", "regex");
         entity1.setId(1);
@@ -51,39 +50,35 @@ class SearchableRestEndpointsTest {
         entity2.setId(2);
 
         Mockito.when(repository.findAll(any(Specification.class)))
-                .thenReturn(List.of(entity1));
-    }
+                .thenReturn(List.of(entity1, entity2));
+    }*/
 
     @Test
-    public void searchEndpointExistsTest() throws Exception {
-        String url = endpointUrl + "/search?filter=id:1";
+    public void searchEndpointExistsAndSuccessfullyFetchOneRecordFromDBTest() throws Exception {
+        String url = CATEGORY_ENDPOINT_URL + "/search?filter=id:1";
 
         mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].unique_name_id").value("name"));
+                .andExpect(jsonPath("$[0].unique_name_id").value("audio"));
     }
 
     @Test
     public void searchEndpointNoUrlParameterReturnAllTest() throws Exception {
-        String url = endpointUrl + "/search";
+        String url = CATEGORY_ENDPOINT_URL + "/search";
 
-       // ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-       // assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-       // assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-     //   assertThat(response.getBody()).contains("\"status_code\" : 200"); // why additional space around " : "?
-
-
-
-
-
+        mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.size()").value(2))
+                .andExpect(jsonPath("$[0].unique_name_id").value("audio"))
+                .andExpect(jsonPath("$[1].unique_name_id").value("video"));
     }
 
-    @Disabled
     @Test
     public void searchEndpointOnlyPartUrlParameterErrorTest() throws Exception {
-        String url = endpointUrl + "/search?filter=";
+        String url = CATEGORY_ENDPOINT_URL + "/search?filter=";
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -93,7 +88,7 @@ class SearchableRestEndpointsTest {
 
     @Test
     public void searchEndpointInvalidSyntaxFormatUrlParameterErrorTest() throws Exception {
-        String url = endpointUrl + "/search?filter=sjksajkldsa";
+        String url = CATEGORY_ENDPOINT_URL + "/search?filter=sjksajkldsa";
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -103,7 +98,7 @@ class SearchableRestEndpointsTest {
 
     @Test
     public void searchEndpointInvalidSemanticFormatUrlParameterErrorTest() throws Exception {
-        String url = endpointUrl + "/search?filter=id>x";
+        String url = CATEGORY_ENDPOINT_URL + "/search?filter=id>x";
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
