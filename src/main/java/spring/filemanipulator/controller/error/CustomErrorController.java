@@ -1,9 +1,37 @@
 package spring.filemanipulator.controller.error;
 
-//@RestController
-//@RequestMapping(path = "${server.error.path:/error}", produces = MediaType.APPLICATION_JSON_VALUE)
-public class CustomErrorController /*extends AbstractErrorController*/ {
-/*
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Overrides Spring Boot default BasicErrorController (/error endpoint).
+ * (Overrides Spring WhiteLabel page...)
+ *
+ * Replacing error page with {@link RestApiError} object
+ *
+ * This default error handling "fallthrough" is executed, only if there is no @ExceptionHandler
+ * method for the relevant error/exception...
+ */
+@RestController
+@RequestMapping(path = "${server.error.path:/error}", produces = MediaType.APPLICATION_JSON_VALUE)
+public class CustomErrorController extends AbstractErrorController {
+
+    @Value("${server.error.path:/error}")
+    private String SERVER_ERROR_PATH;
 
     @Autowired
     public CustomErrorController(ErrorAttributes errorAttributes) {
@@ -13,36 +41,49 @@ public class CustomErrorController /*extends AbstractErrorController*/ {
     @GetMapping
     public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
         HttpStatus httpStatus = getStatus(request);
-        RestApiError restApiError = new RestApiError(httpStatus);
+        RestApiError restApiError =  new RestApiError(httpStatus);
 
-        String uri  = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI).toString();
-        restApiError.setApiPath(uri);
+        String originalRequestUri = getOriginalRequestUriFromRequest(request);
+        restApiError.setApiPath(originalRequestUri);
 
-        restApiError = updateMessageIfMessageExists(restApiError, request);
-        restApiError = updateMessageAndDetailIfExceptionExists(restApiError, request);
+        restApiError.setErrorMessage(getErrorMessageFromRequest(request));
+
+        restApiError.setErrorMessageDetail(getErrorException(request));
 
         if (httpStatus == HttpStatus.NOT_FOUND) {
-            restApiError = updateMessageBecauseNotFound(restApiError, uri);
+            restApiError.setErrorMessage("The url <" + originalRequestUri + "> is not supported.");
+        }
+
+        if (seemsLikeErrorEndpointCalledDirectly(restApiError)) {
+            return new ResponseEntity(generateRestApiErrorErrorEndpointCalledDirectly(), HttpStatus.BAD_REQUEST);
         }
 
         return new ResponseEntity(restApiError, httpStatus);
     }
 
-    private RestApiError updateMessageIfMessageExists(RestApiError restApiError, HttpServletRequest request) {
-        Object exceptionNullable = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-        String message = exceptionNullable.toString();
-        restApiError.setErrorMessage(message);
-        return restApiError;
+    private String getOriginalRequestUriFromRequest(HttpServletRequest request) {
+        String originalUri = String.valueOf(request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI));
+
+        if (originalUri.equals("null")) {
+            originalUri = request.getRequestURI();
+        }
+
+        return originalUri;
     }
 
-    private RestApiError updateMessageAndDetailIfExceptionExists(RestApiError restApiError, HttpServletRequest request) {
-        Object exceptionNullable = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-        getRootCauseMessageFromExceptionIfExists(exceptionNullable)
-                .ifPresent(message -> restApiError.setErrorMessage(message));
+    private String getErrorMessageFromRequest(HttpServletRequest request) {
+        Object exceptionNullable = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+        if (exceptionNullable == null) {
+            return null;
+        } else {
+            return exceptionNullable.toString();
+        }
+    }
 
-        getRootCauseFromExceptionIfExists(exceptionNullable)
-                .ifPresent(cause -> restApiError.setErrorMessageDetail(cause));
-        return restApiError;
+    private String getErrorException(HttpServletRequest request) {
+        Object exceptionNullable = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+        return getRootCauseMessageFromExceptionIfExists(exceptionNullable)
+                .orElse(null);
     }
 
     private Optional<String> getRootCauseMessageFromExceptionIfExists(Object exceptionNullable) {
@@ -61,15 +102,24 @@ public class CustomErrorController /*extends AbstractErrorController*/ {
             return Optional.empty();
     }
 
-    private RestApiError updateMessageBecauseNotFound(RestApiError restApiError, String uri) {
-        restApiError.setErrorMessage("Most likely the requested api endpoint: " + uri + " is unknown...");
+    private boolean seemsLikeErrorEndpointCalledDirectly(RestApiError restApiError) {
+        return restApiError.getApiPath().equals(SERVER_ERROR_PATH)
+            && HttpStatus.valueOf(restApiError.getStatusCode()).equals(HttpStatus.INTERNAL_SERVER_ERROR)
+            && restApiError.getErrorMessage() == null
+            && restApiError.getErrorMessageDetail() == null;
+    }
+
+    private RestApiError generateRestApiErrorErrorEndpointCalledDirectly() {
+        RestApiError restApiError = new RestApiError(HttpStatus.BAD_REQUEST);
+        restApiError.setApiPath(SERVER_ERROR_PATH);
+        restApiError.setErrorMessage("Endpoint /error is not meant to be used directly...");
         return restApiError;
     }
 
-
-    // based on official documentation this is not used, ignored
+    // based on the official documentation this is not used, ignored
+    // since 2.3.0 in favor of setting the property server.error.path
     @Override
     public String getErrorPath() {
-        return null;
-    }*/
+        throw new UnsupportedOperationException("This should have not been called...like... ever...");
+    }
 }

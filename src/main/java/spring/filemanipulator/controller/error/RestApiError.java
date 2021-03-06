@@ -1,7 +1,6 @@
 package spring.filemanipulator.controller.error;
 
 import lombok.*;
-import lombok.extern.java.Log;
 import org.springframework.http.HttpStatus;
 
 import javax.validation.constraints.Max;
@@ -13,19 +12,27 @@ import java.util.Map;
 
 /**
  * Whenever error/exception etc. is encountered during user's request processing,
- * This class represents "pojo" json format response.
+ * than this class is used as customized error response.
+ *
+ * It's implemented in such a way that it's toString() method is in the JSON format.
  */
 @Data
-@RequiredArgsConstructor
-@Log
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestApiError {
+
+    private static final int HTTP_CODE_MIN_VALUE = 200;
+    private static final int HTTP_CODE_MAX_VALUE = 599;
 
     @Setter(AccessLevel.NONE)
     private LocalDateTime timestamp = LocalDateTime.now();
 
-    @Min(0) @Max(599)
+    @Min(HTTP_CODE_MIN_VALUE)
+    @Max(HTTP_CODE_MAX_VALUE)
+    @Setter(AccessLevel.NONE)
     private int statusCode;
+
     @NonNull
+    @Setter(AccessLevel.NONE)
     private String statusError;
 
     private String errorMessage;
@@ -63,14 +70,15 @@ public class RestApiError {
         try {
             Object statusCodeValue = attributeMap.get("status");
             Integer statusCode = (Integer) (statusCodeValue); // ClassCastException, NullPointerException
-            if (statusCode >= 200 && statusCode <= 599) {
-                return true;
-            } else {
-                return false;
-            }
+            return isValueInHttpCodeRange(statusCode);
         } catch (ClassCastException | NullPointerException | IllegalArgumentException ex) {
             return false;
         }
+    }
+
+    // TODO determine when and why this works when it should noy
+    private static boolean isValueInHttpCodeRange(int statusCode) {
+        return statusCode >= HTTP_CODE_MAX_VALUE && statusCode <= HTTP_CODE_MAX_VALUE;
     }
 
     public Map<String, Object> toAttributeMap() {
@@ -83,5 +91,10 @@ public class RestApiError {
         linkedMap.put("api_path", apiPath);
 
         return Collections.unmodifiableMap(linkedMap);
+    }
+
+    @Override
+    public String toString() {
+        return toAttributeMap().toString();
     }
 }
