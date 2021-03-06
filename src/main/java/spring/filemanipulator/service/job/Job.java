@@ -3,9 +3,9 @@ package spring.filemanipulator.service.job;
 /**
  * Action, piece of code, executed sequentially using start() method. Returning "result" as Object.
  * Caller may invoke stop() method. This is just a signal. It actually does not stop the execution.
- * It is upon "the running" Worker instance to stop itself, whenever it feels so...
+ * It is upon "the running" Job instance to stop itself, whenever it feels so...
  */
-public interface Worker {
+public interface Job {
     /**
      * Execute job synchronously. Returns something
      */
