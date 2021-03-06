@@ -2,10 +2,10 @@ package spring.filemanipulator.service.entity.operation.string;
 
 import lombok.Setter;
 import org.springframework.context.MessageSource;
-import spring.filemanipulator.service.entity.AbstractNamedServiceEntity;
+import spring.filemanipulator.service.entity.AbstractI18nNamedServiceEntity;
 
 @Setter
-public abstract class AbstractStringOperationNamedServiceEntity extends AbstractNamedServiceEntity {
+public abstract class AbstractStringOperationNamedServiceEntity extends AbstractI18nNamedServiceEntity {
 
     private static final String MESSAGES_PATH_PREFIX = "operations.string.";
 
