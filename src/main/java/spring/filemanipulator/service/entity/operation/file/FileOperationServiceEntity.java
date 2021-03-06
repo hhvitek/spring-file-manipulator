@@ -7,5 +7,5 @@ public interface FileOperationServiceEntity {
     String getName();
     String getDescription();
 
-    void execute(Path sourceFolder, Path targetFolder) throws FileOperationException;
+    void execute(Path sourceFolder, Path destinationFolder) throws FileOperationException;
 }

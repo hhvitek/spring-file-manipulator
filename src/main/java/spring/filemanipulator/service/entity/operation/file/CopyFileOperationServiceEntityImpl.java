@@ -19,7 +19,7 @@ public class CopyFileOperationServiceEntityImpl extends AbstractFileOperationNam
     }
 
     @Override
-    public void execute(Path inputFile, Path outputFile) throws FileOperationException {
+    public void execute(Path sourceFolder, Path destinationFolder) throws FileOperationException {
         log.warn("--------------------COPY------------------");
     }
 

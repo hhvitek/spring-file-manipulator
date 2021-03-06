@@ -6,6 +6,7 @@ import spring.filemanipulator.service.entity.operation.file.FileOperationService
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FileOperationServiceImpl implements FileOperationService {
@@ -23,8 +24,15 @@ public class FileOperationServiceImpl implements FileOperationService {
     }
 
     @Override
+    public Collection<String> getAllUniqueNameIds() {
+        return getAll().stream()
+                .map(FileOperationServiceEntity::getUniqueNameId)
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
     public boolean existsByUniqueNameId(String uniqueNameId) {
         return fileOperationServiceEntities.stream()
-                   .anyMatch(entity -> entity.getUniqueNameId().equals(uniqueNameId));
+                   .anyMatch(entity -> entity.getUniqueNameId().equalsIgnoreCase(uniqueNameId));
     }
 }
