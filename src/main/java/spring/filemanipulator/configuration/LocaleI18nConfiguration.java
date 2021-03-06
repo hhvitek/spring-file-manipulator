@@ -27,7 +27,8 @@ public class LocaleI18nConfiguration implements WebMvcConfigurer {
     }
 
     /**
-     * "lang": should be the name of the request param i.e  localhost:8080/api/endpoint?lang=cz
+     * "lang": should be the name of the request param i.e  localhost:8080/api/endpoint?lang=cs_CZ
+     * There must be a resource file messages_cs_CZ.properties...
      */
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {

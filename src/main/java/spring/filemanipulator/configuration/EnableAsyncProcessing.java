@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Enable asynchronous (@Async) execution.
+ * Required to run background tasks in the application.
  */
 @Configuration
 @EnableAsync

@@ -7,7 +7,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 /**
- * Enables @Valid with messages as path to i18n messages.properties
+ * In internalization environment use MessageSource in conjunction
+ * with @Valid annotation.
+ *
+ * @NotBlank(message = "{task.create.errors.sourceFolder.missing}")
+ * private String sourceFolder;
  */
 @Configuration
 public class EnableI18nCustomValidationMessage {
