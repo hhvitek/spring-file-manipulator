@@ -2,7 +2,7 @@ package spring.filemanipulator.service.job.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import spring.filemanipulator.entity.JobEntity;
 import spring.filemanipulator.repository.JobRepository;
@@ -11,7 +11,7 @@ import spring.filemanipulator.service.job.JobStatusEnum;
 
 import java.util.concurrent.CompletableFuture;
 
-// TODO explicitly saving entity
+
 @Slf4j
 @Service
 public class JobSchedulerImpl implements JobScheduler {
@@ -21,50 +21,66 @@ public class JobSchedulerImpl implements JobScheduler {
 
     private final RunningJobs runningJobs;
 
-    private final ThreadPoolTaskScheduler threadPoolTaskScheduler;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     private final JobRepository jobRepository;
 
     @Autowired
-    public JobSchedulerImpl(final ThreadPoolTaskScheduler threadPoolTaskScheduler,
-                            final RunningJobs runningJobs,
+    public JobSchedulerImpl(final RunningJobs runningJobs,
                             final JobRepository jobRepository) {
-        this.threadPoolTaskScheduler = threadPoolTaskScheduler;
         this.runningJobs = runningJobs;
         this.jobRepository = jobRepository;
 
-        setTaskSchedulerPoolToNumberOfProcessors(threadPoolTaskScheduler);
+        threadPoolTaskExecutor = getThreadPoolTaskExecutor();
 
-        //Runnable scheduledRepeatedTaskRunnable = this::scheduledRepeatedTask;
-        //threadPoolTaskScheduler.scheduleWithFixedDelay(scheduledRepeatedTaskRunnable, SCHEDULED_REPEATABLE_DELAY_IN_MILLIS);
+        // Runnable scheduledRepeatedTaskRunnable = this::scheduledRepeatedTask;
+        // threadPoolTaskScheduler.scheduleWithFixedDelay(scheduledRepeatedTaskRunnable, SCHEDULED_REPEATABLE_DELAY_IN_MILLIS);
     }
 
-    private void setTaskSchedulerPoolToNumberOfProcessors(ThreadPoolTaskScheduler taskScheduler) {
+    /**
+     * Let's explain ThreadPoolTaskExecutor
+     * corePoolSize - Default 1. If FULL then it prefers to queue new workers.
+     * maxPoolSize
+     * queueCapacity - Default INFINITY. If FULL And corePoolSize FULL than new workers up to maxPoolSize.
+     *
+     * This means that maxPoolSize is mostly irrelevant if configured alone!!!
+     */
+    private ThreadPoolTaskExecutor getThreadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
         int cpus = Runtime.getRuntime().availableProcessors();
-        log.info("Number of cpus: {}", cpus);
-        taskScheduler.setPoolSize(cpus);
+        log.debug("jobScheduler: Number of cpus: {}", cpus);
+
+        executor.setCorePoolSize(cpus);
+        executor.setMaxPoolSize(cpus);
+        executor.setThreadNamePrefix("jobScheduler-");
+        executor.initialize();
+
+        log.debug("jobScheduler: corePoolSize-{}, maxPoolSize-{}",
+                executor.getCorePoolSize(),
+                executor.getMaxPoolSize());
+
+        return executor;
     }
 
     @Override
     public void scheduleAndStore(JobEntity jobEntity, Job job) {
         runningJobs.addNew(jobEntity.getId(), job);
 
+        log.debug("JobScheduler Job Starting scheduling...");
         CompletableFuture<Object> completableFuture = createFutureAndScheduleJob(jobEntity, job);
 
-        // hmm, theoretically this code "can" be executed before the lines above:
-        // soouu let's just ignore it.
-        // update: - reworked runningJobs, no exceptions
-        //         - so fast that delete called sooner than add, may result in leak -> reworked runningJobs more ->
-        //              -> split runningJobs into two phases, here come the second one:
         runningJobs.setFuture(jobEntity.getId(), completableFuture);
+        log.debug("JobScheduler finished scheduling...");
     }
 
     private CompletableFuture<Object> createFutureAndScheduleJob(JobEntity jobEntity, Job job) {
         return CompletableFuture
                 .supplyAsync(() -> {
-                    jobEntity.setJobStatusUniqueNameId(JobStatusEnum.SCHEDULED_RUNNING);
+                    setNewJobStatusAndStoreIntoDb(jobEntity, JobStatusEnum.SCHEDULED_RUNNING);
+
                     return job.start();
-                })
+                }, threadPoolTaskExecutor)
                 .whenCompleteAsync((result, throwable) -> {
                     runningJobs.delete(jobEntity.getId());
 
@@ -73,7 +89,12 @@ public class JobSchedulerImpl implements JobScheduler {
                     } else {
                         handleJobResult(result, jobEntity);
                     }
-                }, threadPoolTaskScheduler);
+                }, threadPoolTaskExecutor);
+    }
+
+    private void setNewJobStatusAndStoreIntoDb(JobEntity jobEntity, JobStatusEnum newJobStatus) {
+        jobEntity.setJobStatusUniqueNameId(newJobStatus);
+        jobRepository.save(jobEntity);
     }
 
     private boolean didCompleteWithException(Throwable throwable) {
@@ -81,13 +102,28 @@ public class JobSchedulerImpl implements JobScheduler {
     }
 
     private void handleJobException(Throwable throwable, JobEntity jobEntity) {
-        log.warn("Job Exception thrown!!!!!!! {}, jobEntity: {}", throwable, jobEntity);
-        jobEntity.setJobStatusUniqueNameId(JobStatusEnum.FINISHED_ERROR);
+        log.error("JobScheduler Exception thrown!!!!!!! {}, jobEntity: {}", throwable, jobEntity);
+        setNewJobStatusAndStoreIntoDb(jobEntity, JobStatusEnum.FINISHED_ERROR);
     }
 
     private void handleJobResult(Object jobResult, JobEntity jobEntity) {
-        log.warn("Job result: {}, jobEntity: {}", jobResult, jobEntity);
-        jobEntity.setJobStatusUniqueNameId(JobStatusEnum.FINISHED_OK);
+        log.debug("JobScheduler finished ok result: {}, jobEntity: {}", jobResult, jobEntity);
+
+        // TODO what if job was stopped
+        // should I cancel completableFuture hardcore
+        // should I place here if-else on current status...
+        if (wasJobStopped(jobEntity.getId())) {
+            log.debug("JobScheduler job {} was stopped before. Ignoring...", jobEntity.getId());
+        } else {
+            setNewJobStatusAndStoreIntoDb(jobEntity, JobStatusEnum.FINISHED_OK);
+        }
+
+    }
+
+    private boolean wasJobStopped(int jobId) {
+        return jobRepository.findById(jobId)
+                .stream()
+                .anyMatch(jobEntity -> jobEntity.getJobStatusUniqueNameId().isConsideredStopped());
     }
 
     @Override
@@ -99,9 +135,11 @@ public class JobSchedulerImpl implements JobScheduler {
     public void signalToStop(int jobId) {
         if (isScheduledOrRunning(jobId)) {
             runningJobs.stop(jobId);
+            runningJobs.delete(jobId);
             // Does it to make sense to set Job status to STOP here
             // even throughout a Job can run for hours long before it stops itself?
             // otherwise a Job implementation would have to do it...
+            // maybe yes, after Job finishes ther should be check...
             setJobStatusToStopped(jobId);
         }
 
@@ -110,7 +148,8 @@ public class JobSchedulerImpl implements JobScheduler {
     private void setJobStatusToStopped(int jobId) {
         if (jobRepository.existsById(jobId)) {
             JobEntity jobEntity = jobRepository.findById(jobId).get();
-            jobEntity.setJobStatusUniqueNameId(JobStatusEnum.SIGNALED_TO_STOP);
+
+            setNewJobStatusAndStoreIntoDb(jobEntity, JobStatusEnum.SIGNALED_TO_STOP);
         }
     }
 
@@ -118,7 +157,7 @@ public class JobSchedulerImpl implements JobScheduler {
      * Repeatable scheduled task, anything???
      */
     private void scheduledRepeatedTask() {
-        log.info("Scheduled Tasks repeatable thread executed!!!! Nothing happened...");
+        log.debug("Scheduled Tasks repeatable thread executed!!!! Nothing happened...");
 
         /*
           synchronized (workerIdToOneWorkerItem) {

@@ -53,17 +53,26 @@ public class RunningJobs {
         return jobIdToScheduledOneJob.containsKey(id);
     }
 
+    /**
+     * It's upon the caller to manage removals....
+     */
     public void stop(int id)  {
         RunningOneJobContainer scheduledJob = jobIdToScheduledOneJob.get(id); // returns null if no id mapping
 
-        if (scheduledJob != null && scheduledJob.getCompletableFuture() != null) {
+        if (scheduledJobExistsAndFutureHasAlreadyBeenSet(scheduledJob)) {
+            log.debug("Stopping running job: {}", id);
             Job job = scheduledJob.getJob();
             job.stop();
 
-            CompletableFuture<Object> future = scheduledJob.getCompletableFuture();
-            future.cancel(false); // bool does not have any effect
+            // CompletableFuture<Object> future = scheduledJob.getCompletableFuture();
+            // future.cancel(false); This will destroy completableFuture - hardcore...
+            // running job bye-bye (well only it it Thread.sleep)
         } else {
             log.warn("Trying to stop job id: <{}>. However either 1] no running job found. or 2] trying to stop to early...", id);
         }
+    }
+
+    private boolean scheduledJobExistsAndFutureHasAlreadyBeenSet(RunningOneJobContainer scheduledJob) {
+        return scheduledJob != null && scheduledJob.getCompletableFuture() != null;
     }
 }
