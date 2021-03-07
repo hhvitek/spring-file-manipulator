@@ -1,20 +1,18 @@
 package spring.filemanipulator.controller.error;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.orm.jpa.JpaSystemException;
-import org.springframework.validation.Errors;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import spring.filemanipulator.service.job.JobAlreadyFinishedException;
 import spring.filemanipulator.service.task.InvalidCreateTaskParametersException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
  * @ResponseStatus can help to set the HTTP status code for the response.
  * }</pre>
  */
+@Slf4j
 @RestControllerAdvice
 //@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
@@ -123,6 +123,31 @@ public class RestExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
         restApiError.setApiPath(httpServletRequest.getRequestURI());
         return restApiError;
     }
+
+    @ExceptionHandler(JobAlreadyFinishedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RestApiError handleJobAlreadyFinishedException(
+            JobAlreadyFinishedException ex,
+            HttpServletRequest httpServletRequest    ) {
+        RestApiError restApiError = new RestApiError(HttpStatus.BAD_REQUEST);
+        restApiError.setErrorMessage("The scheduled Job cannot be stopped because it already finished.");
+        restApiError.setErrorMessageDetail(ExceptionUtils.getRootCauseMessage(ex));
+        restApiError.setApiPath(httpServletRequest.getRequestURI());
+        return restApiError;
+    }
+
+/*    @ExceptionHandler(JDBCException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public RestApiError handleSqlException(
+            JDBCException ex,
+            HttpServletRequest httpServletRequest) {
+        RestApiError restApiError = new RestApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        restApiError.setErrorMessage("Database issue encountered.");
+        restApiError.setErrorMessageDetail(ExceptionUtils.getRootCauseMessage(ex));
+        restApiError.setApiPath(httpServletRequest.getRequestURI());
+        log.info(restApiError.toString());
+        return restApiError;
+    }*/
 
     /**
      * Corrupt json serialization.
