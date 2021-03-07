@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.*;
 import spring.filemanipulator.entity.TaskEntity;
 import spring.filemanipulator.repository.TaskRepository;
 import spring.filemanipulator.service.entity.NamedServiceEntity;
-import spring.filemanipulator.service.task.*;
-import spring.filemanipulator.service.task.status.TaskStatusI18nNamedServiceService;
+import spring.filemanipulator.service.task.InvalidCreateTaskParametersException;
+import spring.filemanipulator.service.task.TaskNotFoundException;
+import spring.filemanipulator.service.task.TaskService;
 import spring.filemanipulator.service.task.validator.CreateTaskParametersDTO;
 
 import javax.validation.Valid;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
@@ -47,8 +47,7 @@ public class TaskController extends AbstractSearchableRestController<TaskEntity,
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/createNewTask")
     public TaskEntity createNewTask(@RequestBody @Valid CreateTaskParametersDTO createTaskParametersDTO) throws InvalidCreateTaskParametersException {
-        Path path = Path.of("./");
-        log.info(path.toAbsolutePath().toString());
+        log.debug("The new createNewTask request received. DTO: {}", createTaskParametersDTO);
         return taskService.createAndSchedule(createTaskParametersDTO);
     }
 }
