@@ -1,11 +1,10 @@
 package spring.filemanipulator.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import spring.filemanipulator.controller.error.ItemNotFoundException;
 import spring.filemanipulator.repository.AbstractRepository;
 
-import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,12 +33,4 @@ public abstract class AbstractRestController<Entity extends Serializable, ID ext
         return repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
     }
-
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
-    public Entity createOne(@Valid @RequestBody Entity newOne) {
-        return repository.save(newOne);
-    }
-
-
 }
