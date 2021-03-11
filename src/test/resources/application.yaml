@@ -9,14 +9,16 @@ spring:
     hikari:
       data-source-properties:
         foreign_keys: true
-      connection-init-sql: PRAGMA busy_timeout=1111;
+      connection-init-sql: PRAGMA busy_timeout=2222; PRAGMA journal_mode=WAL;
+      maximum-pool-size: 1 # sqlite multi*threading issues with locking whole file and no busy_timeout worked...
   jackson:
     property-naming-strategy: SNAKE_CASE
     serialization:
       indent_output: true
+      fail-on-empty-beans: false
   jpa:
     database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
-    show-sql: true
+    #    show-sql: true
     properties:
       javax:
         persistence:
@@ -31,6 +33,11 @@ spring:
 
   messages:
     basename: i18n/messages
+
+logging:
+  level:
+    spring:
+      filemanipulator.: DEBUG
 
 server:
   error:
@@ -52,3 +59,4 @@ custom-properties:
     - /api/settings
     - /api/string_operations
     - /api/tasks
+    - /api/jobs
