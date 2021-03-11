@@ -2,6 +2,8 @@ package spring.filemanipulator.service.task.manager;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,11 +14,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.filemanipulator.entity.TaskEntity;
 import spring.filemanipulator.repository.JobRepository;
 import spring.filemanipulator.repository.TaskRepository;
-import spring.filemanipulator.utilities.long_computing.ComputingDelayer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -66,13 +69,21 @@ class TaskSchedulerImplTest {
         Files.createDirectory(OUTPUT_FOLDER);
     }
 
+    private ConditionFactory createAwaitility() {
+        return Awaitility.await()
+                .pollInterval(10L, TimeUnit.MILLISECONDS)
+                .pollDelay(Duration.ZERO)
+                .atMost(Duration.ofMillis(100L));
+    }
+
     @Test
     public void scheduleAndStoreOk() {
         TaskEntity taskEntity = createTaskEntity();
 
         taskScheduler.scheduleAndStore(taskEntity);
 
-        new ComputingDelayer(10).compute();
+        createAwaitility()
+                .until(() -> taskEntity.getProcessedFileCount() > 1);
 
         Assertions.assertFalse(taskEntity.isHasError());
         Assertions.assertEquals(2, taskEntity.getProcessedFileCount());
@@ -104,7 +115,8 @@ class TaskSchedulerImplTest {
 
         taskScheduler.scheduleAndStore(taskEntity);
 
-        new ComputingDelayer(10).compute();
+        createAwaitility()
+                .until(taskEntity::isHasError);
 
         Assertions.assertTrue(taskEntity.isHasError());
         Assertions.assertTrue(taskEntity.getErrorMsg().contains("OperationNotFoundException"));
@@ -117,7 +129,8 @@ class TaskSchedulerImplTest {
 
         taskScheduler.scheduleAndStore(taskEntity);
 
-        new ComputingDelayer(10).compute();
+        createAwaitility()
+                .until(taskEntity::isHasError);
 
         Assertions.assertTrue(taskEntity.isHasError());
         Assertions.assertTrue(taskEntity.getErrorMsg().contains("OperationNotFoundException"));
