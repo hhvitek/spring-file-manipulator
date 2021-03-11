@@ -1,21 +1,20 @@
 package spring.filemanipulator.service.job;
 
-public class JobAlreadyFinishedException extends RuntimeException {
+public class JobNotScheduledException extends RuntimeException {
 
     protected final int id;
 
-    public JobAlreadyFinishedException(int jobId) {
-        this.id = jobId;
+    public JobNotScheduledException(int id) {
+        this.id = id;
     }
 
     @Override
     public String toString() {
-        return "The Job (id=" + id + ") has already finished.";
+        return "The job (id=" + id + ") has not been scheduled yet.";
     }
 
     @Override
     public String getMessage() {
         return toString();
     }
-
 }
