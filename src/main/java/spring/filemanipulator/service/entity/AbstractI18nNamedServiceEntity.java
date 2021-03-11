@@ -5,7 +5,20 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.io.Serializable;
+import java.util.Locale;
 
+/**<pre>
+ * Idea is to support internalization in the NamedServiceEntities
+ *
+ * uniqueNameId, name, description
+ *
+ * Path in the messages.properties file:
+ *      messagesPathPrefix.uniqueNameId.suffix
+ *
+ *      operations.file.COPY.name=COPY
+ *      operations.file.COPY.description=Description message
+ * </pre>
+ */
 public abstract class AbstractI18nNamedServiceEntity implements NamedServiceEntity, Serializable {
 
     private static final String MESSAGES_PATH_NAME_SUFFIX = ".name";
@@ -30,6 +43,8 @@ public abstract class AbstractI18nNamedServiceEntity implements NamedServiceEnti
     @Override
     public String getName() throws NoSuchMessageException {
         return messageSource.getMessage(messagesPathToName, null, LocaleContextHolder.getLocale());
+        // return messageSource.getMessage(messagesPathToName, null, "default message here", LocaleContextHolder.getLocale());
+        // does not throw instead return default message which can be null
     }
 
     @Override
@@ -40,5 +55,13 @@ public abstract class AbstractI18nNamedServiceEntity implements NamedServiceEnti
     @Override
     public String getUniqueNameId() throws NoSuchMessageException {
         return uniqueNameId;
+    }
+
+    public String getName(Locale locale) throws NoSuchMessageException {
+        return messageSource.getMessage(messagesPathToName, null, locale);
+    }
+
+    public String getDescription(Locale locale) throws NoSuchMessageException {
+        return messageSource.getMessage(messagesPathToDescription, null, locale);
     }
 }
