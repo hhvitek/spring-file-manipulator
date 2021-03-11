@@ -11,6 +11,10 @@ public enum JobStatusEnum {
         return name().startsWith("FINISHED_");
     }
 
+    public boolean isConsideredStopped() {
+        return this == SIGNALED_TO_STOP;
+    }
+
     public static boolean isConsideredFinished(String uniqueJobStatusName) {
         if (existsByUniqueName(uniqueJobStatusName)) {
             return uniqueJobStatusName.startsWith("FINISHED_");
