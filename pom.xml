@@ -101,6 +101,18 @@
             <version>20.1.0</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.awaitility/awaitility
+            For Test
+            Instead of Thread.sleep()
+        -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.0.3</version>
+            <scope>test</scope>
+        </dependency>
+
+
 
     </dependencies>
 
