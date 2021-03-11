@@ -3,6 +3,7 @@ package spring.filemanipulator.service.task.validator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -34,4 +35,11 @@ public class CreateTaskParametersDTO {
     // test if uniqueNameId exists
     @NotBlank(message = "{task.create.errors.fileOperation.missing}")
     private String fileOperation;
+
+    @NotBlank(message = "{task.create.errors.stringOperation.missing}")
+    private String stringOperation;
+
+    private String stringOperationWhat;
+
+    private String stringOperationWith;
 }

@@ -1,16 +1,19 @@
 package spring.filemanipulator.service.task.validator;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
-import spring.filemanipulator.service.operations.FileOperationService;
+import spring.filemanipulator.service.operation.file.FileOperationService;
+import spring.filemanipulator.service.operation.string.StringOperationService;
 
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+
 
 @Component("beforeCreateCreateTaskParametersDTOValidator")
 public class CreateTaskParametersDTOValidator implements CustomSpringValidator<CreateTaskParametersDTO> {
@@ -18,12 +21,15 @@ public class CreateTaskParametersDTOValidator implements CustomSpringValidator<C
     private static final String MESSAGES_PATH_PREFIX = "task.create.errors.";
 
     private final FileOperationService fileOperationService;
+    private final StringOperationService stringOperationService;
 
     private Errors lastErrors;
 
     @Autowired
-    public CreateTaskParametersDTOValidator(final FileOperationService fileOperationService) {
+    public CreateTaskParametersDTOValidator(final FileOperationService fileOperationService,
+                                            final StringOperationService stringOperationService) {
         this.fileOperationService = fileOperationService;
+        this.stringOperationService = stringOperationService;
     }
 
     // which bean to validate
@@ -71,6 +77,16 @@ public class CreateTaskParametersDTOValidator implements CustomSpringValidator<C
                     "File operation is not recognized."
             );
         }
+
+        if (!doesStringOperationExistByUniqueNameId(dto.getStringOperation())){
+            String stringOperations = stringOperationService.getAllUniqueNameIds().toString();
+            errors.rejectValue(
+                    "stringOperation",
+                    MESSAGES_PATH_PREFIX + "stringOperation",
+                    new Object[]{(stringOperations)},
+                    "String operation is not recognized."
+            );
+        }
     }
 
     private boolean isValidPathVariable(String file) {
@@ -106,6 +122,11 @@ public class CreateTaskParametersDTOValidator implements CustomSpringValidator<C
 
     private boolean doesFileOperationExistByUniqueNameId(String uniqueNameId) {
         return fileOperationService.existsByUniqueNameId(uniqueNameId);
+    }
+
+
+    private boolean doesStringOperationExistByUniqueNameId(String uniqueNameId) {
+        return stringOperationService.existsByUniqueNameId(uniqueNameId);
     }
 
 
