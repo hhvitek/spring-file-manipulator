@@ -1,13 +1,11 @@
 package spring.filemanipulator.service.task;
 
-import spring.filemanipulator.service.task.TaskNotFoundException;
+import spring.filemanipulator.service.job.JobNotScheduledException;
 
-public class TaskNotScheduledException extends RuntimeException {
-
-    private final int id;
+public class TaskNotScheduledException extends JobNotScheduledException {
 
     public TaskNotScheduledException(int id) {
-        this.id = id;
+        super(id);
     }
 
     @Override

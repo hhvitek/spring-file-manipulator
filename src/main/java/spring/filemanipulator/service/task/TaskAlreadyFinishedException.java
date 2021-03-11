@@ -1,11 +1,11 @@
 package spring.filemanipulator.service.task;
 
-public class TaskAlreadyFinishedException extends RuntimeException {
+import spring.filemanipulator.service.job.JobAlreadyFinishedException;
 
-    private final int id;
+public class TaskAlreadyFinishedException extends JobAlreadyFinishedException {
 
     public TaskAlreadyFinishedException(int id) {
-        this.id = id;
+        super(id);
     }
 
     @Override

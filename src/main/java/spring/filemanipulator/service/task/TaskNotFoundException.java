@@ -1,23 +1,24 @@
 package spring.filemanipulator.service.task;
 
-import spring.filemanipulator.service.job.JobNotFoundException;
+import spring.filemanipulator.controller.error.ItemNotFoundException;
 
 
-public class TaskNotFoundException extends RuntimeException {
+public class TaskNotFoundException extends ItemNotFoundException {
 
     private final int id;
 
     public TaskNotFoundException(int id) {
+        super(id);
         this.id = id;
     }
 
     @Override
-    public String toString() {
-        return "The task (id=" + id + ") not found.";
+    public String getMessage() {
+        return "The Task (id=" + id + ") not found.";
     }
 
     @Override
-    public String getMessage() {
-        return toString();
+    public String toString() {
+        return "TaskNotFoundException: " + getMessage();
     }
 }
