@@ -6,14 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import spring.filemanipulator.entity.TaskEntity;
 import spring.filemanipulator.repository.TaskRepository;
-import spring.filemanipulator.service.entity.NamedServiceEntity;
-import spring.filemanipulator.service.task.InvalidCreateTaskParametersException;
-import spring.filemanipulator.service.task.TaskNotFoundException;
-import spring.filemanipulator.service.task.TaskService;
+import spring.filemanipulator.service.job.JobNotFoundException;
+import spring.filemanipulator.service.task.*;
 import spring.filemanipulator.service.task.validator.CreateTaskParametersDTO;
 
 import javax.validation.Valid;
-import java.util.Collection;
 import java.util.Map;
 
 @Slf4j
@@ -23,11 +20,14 @@ public class TaskController extends AbstractSearchableRestController<TaskEntity,
 
     private final TaskService taskService;
 
+    private final TaskRepository taskRepository;
+
     @Autowired
     protected TaskController(
             final TaskRepository taskRepository,
             final TaskService taskService) {
         super(taskRepository);
+        this.taskRepository = taskRepository;
         this.taskService = taskService;
     }
 
@@ -38,16 +38,22 @@ public class TaskController extends AbstractSearchableRestController<TaskEntity,
         return Map.of("finished", isFinished);
     }
 
-    @GetMapping("/task_statuses")
-    public Collection<NamedServiceEntity> getTaskStatuses() {
-      //  return taskStatusI18nNamedServiceService.getAll();
-        throw new UnsupportedOperationException();
-    }
-
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/createNewTask")
     public TaskEntity createNewTask(@RequestBody @Valid CreateTaskParametersDTO createTaskParametersDTO) throws InvalidCreateTaskParametersException {
         log.debug("The new createNewTask request received. DTO: {}", createTaskParametersDTO);
         return taskService.createAndSchedule(createTaskParametersDTO);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/{id:\\d+}/signalToStop")
+    public TaskEntity signalToStop(@PathVariable Integer id) throws
+            TaskNotFoundException, TaskAlreadyFinishedException, TaskNotScheduledException, JobNotFoundException {
+
+        taskService.signalToStopIfNotFoundThrow(id);
+
+        return taskRepository.findById(id).orElseThrow(
+                () -> new TaskNotFoundException(id)
+        );
     }
 }

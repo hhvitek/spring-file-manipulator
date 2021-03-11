@@ -26,7 +26,7 @@ public class JobController extends AbstractSearchableRestController<JobEntity, I
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/{id:\\d+}/signalToStop")
+    @PostMapping("/{id:\\d+}/signalToStop")
     public JobEntity signalToStop(@PathVariable Integer id) throws JobNotFoundException, JobAlreadyFinishedException {
         jobService.signalToStopIfNotFoundThrow(id);
 
