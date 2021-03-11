@@ -20,6 +20,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
 
+    // TODO this is not implemented i18n - works just with uniqe name ids...
     private final TaskStatusI18nNamedServiceService taskStatusI18nNamedServiceService;
 
 
@@ -37,6 +38,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskEntity createAndSchedule(CreateTaskParametersDTO dto) throws InvalidCreateTaskParametersException {
+        // return managed
         TaskEntity taskEntity = taskEntityCreator.createAndStore(dto);
         taskScheduler.scheduleAndStore(taskEntity);
         return taskEntity;
@@ -52,8 +54,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void signalToStop(Integer taskId) throws TaskNotFoundException {
-        taskScheduler.signalToStop(taskId);
+    public void signalToStopIfNotFoundThrow(Integer taskId) throws TaskNotFoundException {
+        taskScheduler.signalToStopThrow(taskId);
     }
 
 

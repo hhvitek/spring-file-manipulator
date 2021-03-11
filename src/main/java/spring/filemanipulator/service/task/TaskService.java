@@ -1,6 +1,9 @@
 package spring.filemanipulator.service.task;
 
+import org.springframework.scheduling.config.Task;
+import spring.filemanipulator.entity.JobEntity;
 import spring.filemanipulator.entity.TaskEntity;
+import spring.filemanipulator.service.job.JobNotFoundException;
 import spring.filemanipulator.service.task.validator.CreateTaskParametersDTO;
 
 /**
@@ -34,8 +37,16 @@ public interface TaskService {
      * Stop task if it is running.
      * Generally this "stop" should be approached with care. It may just flag a task to stop executing...
      *
-     * @param taskId task id
      * @throws TaskNotFoundException If no task taskId exists.
+     * @throws TaskNotScheduledException Simply put a Task has not yet been scheduled, therefore it cannot be stopped.
+     * There is a Task record (TaskEntity) in DB, but no related Job record (JobEntity).
+     * The JobEntity record is always created when a new Job is scheduled.
+     *
+     * @throws TaskAlreadyFinishedException If the task has already finished its execution, it, well, does not make sense
+     * to stop...
+     *
+     * @throws JobNotFoundException This should never happen. Indicates DB inconsistency.
+     * Mapping TaskEntity <-> JobEntity corrupted.
      */
-    void signalToStop(Integer taskId) throws TaskNotFoundException;
+    void signalToStopIfNotFoundThrow(Integer taskId) throws TaskNotFoundException;
 }
