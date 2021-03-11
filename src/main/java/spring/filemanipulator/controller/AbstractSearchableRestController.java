@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring.filemanipulator.controller.error.InvalidSearchFilterException;
 import spring.filemanipulator.repository.AbstractSearchableRepository;
-import spring.filemanipulator.specificationapi.CustomSpecificationCombineBuilder;
+import spring.filemanipulator.configuration.specificationapi.CustomSpecificationCombineBuilder;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
