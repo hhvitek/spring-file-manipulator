@@ -39,15 +39,16 @@ public class TaskEntityCreatorImpl implements TaskEntityCreator {
                 .fileOperationUniqueNameId(dto.getFileOperation())
                 .fileOperationInputFolder(dto.getSourceFolder())
                 .fileOperationDestinationFolder(dto.getDestinationFolder())
-                .stringOperationUniqueNameId("TODO: THIS IS NOT FINISHED!")
+                .stringOperationUniqueNameId(dto.getStringOperation())
+                .stringOperationRegexWhat(dto.getStringOperationWhat())
+                .stringOperationReplaceTo(dto.getStringOperationWith())
                 .build();
     }
 
     @Override
     public TaskEntity createAndStore(CreateTaskParametersDTO dto) throws InvalidCreateTaskParametersException {
         TaskEntity taskEntity = create(dto);
-        taskRepository.save(taskEntity);
-        return taskEntity;
+        return taskRepository.save(taskEntity);
     }
 
 }
