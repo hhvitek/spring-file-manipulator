@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+// TODO this is not implemented i18n - works just with uniqe name ids...
 /**
  * API to work with TaskStatus UniqueNameId strings
  * Does not check actually Tasks statuses!! Use TaskService for that purpose...
