@@ -2,24 +2,25 @@ package spring.filemanipulator.service.job.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
 import spring.filemanipulator.service.job.Job;
+import spring.filemanipulator.utilities.long_computing.ComputingDelayer;
 
 @Slf4j
 public class TestBackgroundJob implements Job {
 
-    public int delayInMillis;
+    public int delayInMillis = 0;
 
-    public boolean shouldThrow;
+    public boolean shouldThrow = false;
 
-    public volatile boolean startedExecuted;
+    public volatile boolean startedExecuted = false;
 
-    public volatile boolean stopExecuted;
+    public volatile boolean stopExecuted = false;
 
     public TestBackgroundJob(int delayInMillis) {
         this.delayInMillis = delayInMillis;
     }
 
-    public TestBackgroundJob(boolean shouldThrow) {
-        this.shouldThrow = shouldThrow;
+    public TestBackgroundJob(boolean shouldAlwaysThrowException) {
+        this.shouldThrow = shouldAlwaysThrowException;
     }
 
 
@@ -31,11 +32,7 @@ public class TestBackgroundJob implements Job {
             throw new RuntimeException("This job is configured to always throw exception...");
         }
 
-        try {
-            Thread.sleep(delayInMillis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        new ComputingDelayer(delayInMillis).compute();
 
         return null;
     }

@@ -1,6 +1,7 @@
-package spring.filemanipulator.specificationapi;
+package spring.filemanipulator.controller.specificationapi;
 
 import org.junit.jupiter.api.Test;
+import spring.filemanipulator.configuration.specificationapi.SearchOperation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;

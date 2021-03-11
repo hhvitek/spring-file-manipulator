@@ -1,4 +1,4 @@
-package spring.filemanipulator.specificationapi;
+package spring.filemanipulator.controller.specificationapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +7,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.jpa.domain.Specification;
 import spring.filemanipulator.entity.FileRegexPredefinedCategoryEntity;
 import spring.filemanipulator.repository.FileRegexPredefinedCategoryRepository;
+import spring.filemanipulator.configuration.specificationapi.CustomSpecification;
+import spring.filemanipulator.configuration.specificationapi.CustomSpecificationCombineBuilder;
+import spring.filemanipulator.configuration.specificationapi.SearchCriteria;
+import spring.filemanipulator.configuration.specificationapi.SearchOperation;
 
 import java.util.List;
 

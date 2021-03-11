@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 class TestControllerCreateNewTaskTest {
 
@@ -110,7 +110,6 @@ class TestControllerCreateNewTaskTest {
 
     @Test
     public void missingJsonAttribute() throws Exception {
-
         String body = "{\n"
                 + "\"destination_folder\": \"./destination-folder\",\n"
                 + "\"syntax_and_pattern\": \"glob:pattern\",\n"
@@ -125,7 +124,7 @@ class TestControllerCreateNewTaskTest {
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_message", containsString("Validation failed. Cannot proceed.")))
-                .andExpect(jsonPath("$.error_message_detail", containsString("Encountered errors count: 1")));
+                .andExpect(jsonPath("$.error_message_detail", containsString("Encountered errors count: 2")));
     }
 
     @Test
@@ -140,7 +139,8 @@ class TestControllerCreateNewTaskTest {
                 + "\"source_folder\": \"" + sourceFolder + "\",\n"
                 + "\"destinationFolder\": \"./controller/destination-folder\",\n"
                 + "\"syntax_and_pattern\": \"glob:pattern\",\n"
-                + "\"file_operation\": \"COPY\"\n"
+                + "\"file_operation\": \"COPY\",\n"
+                + "\"string_operation\": \"NICE_LOOKING_FILENAME\""
                 + "}\n";
 
         mockMvc.perform(
@@ -165,7 +165,8 @@ class TestControllerCreateNewTaskTest {
                 + "\"source_folder\": \"" + sourceFolder + "\",\n"
                 + "\"destinationFolder\": \"./controller/destination-folder\",\n"
                 + "\"syntax_and_pattern\": \"glob:pattern\",\n"
-                + "\"file_operation\": \"COPY\"\n"
+                + "\"file_operation\": \"COPY\",\n"
+                + "\"string_operation\": \"NICE_LOOKING_FILENAME\""
                 + "}\n";
 
         mockMvc.perform(
@@ -190,7 +191,8 @@ class TestControllerCreateNewTaskTest {
                 + "\"source_folder\": \"" + sourceFolder + "\",\n"
                 + "\"destination_folder\": \"./controller/destination-folder\",\n"
                 + "\"syntax_and_pattern\": \"glob:pattern\",\n"
-                + "\"file_operation\": \"COPY\"\n"
+                + "\"file_operation\": \"COPY\",\n"
+                + "\"string_operation\": \"NICE_LOOKING_FILENAME\""
                 + "}\n";
 
         mockMvc.perform(

@@ -11,16 +11,16 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
-import spring.filemanipulator.service.operations.FileOperationService;
-import spring.filemanipulator.service.operations.FileOperationServiceImpl;
-import spring.filemanipulator.service.task.validator.CreateTaskParametersDTO;
-import spring.filemanipulator.service.task.validator.CreateTaskParametersDTOValidator;
+import spring.filemanipulator.service.operation.file.FileOperationService;
+import spring.filemanipulator.service.operation.file.FileOperationServiceImpl;
+import spring.filemanipulator.service.operation.string.StringOperationService;
+import spring.filemanipulator.service.operation.string.StringOperationServiceImpl;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest(classes = { CreateTaskParametersDTOValidator.class, FileOperationServiceImpl.class})
+@SpringBootTest(classes = { CreateTaskParametersDTOValidator.class, FileOperationServiceImpl.class, StringOperationServiceImpl.class})
 class CreateTaskParametersDTOValidatorTest {
 
     private final CreateTaskParametersDTOValidator validator;
@@ -29,6 +29,9 @@ class CreateTaskParametersDTOValidatorTest {
 
     @MockBean
     private FileOperationService fileOperationService;
+
+    @MockBean
+    private StringOperationService stringOperationService;
 
     @Autowired
     CreateTaskParametersDTOValidatorTest(final CreateTaskParametersDTOValidator validator, ResourceLoader resourceLoader) {
@@ -43,6 +46,9 @@ class CreateTaskParametersDTOValidatorTest {
 
         Mockito.when(fileOperationService.existsByUniqueNameId("UNKNOWN"))
                 .thenReturn(false);
+
+        Mockito.when(stringOperationService.existsByUniqueNameId("NICE_LOOKING_FILENAME"))
+                .thenReturn(true);
     }
 
 
@@ -53,7 +59,7 @@ class CreateTaskParametersDTOValidatorTest {
 
         ValidationUtils.invokeValidator(validator, dto, errors);
 
-        assertThat(errors.getErrorCount()).isEqualTo(4);
+        assertThat(errors.getErrorCount()).isEqualTo(5);
     }
 
     @Test
@@ -62,7 +68,10 @@ class CreateTaskParametersDTOValidatorTest {
                 "U:\\sourceNotExist",
                 "U:\\destNotExistButIsOkPathVariable",
                 "glob:\\d+",
-                "COPY");
+                "COPY",
+                "NICE_LOOKING_FILENAME",
+                null,
+                null);
         Errors errors = new BeanPropertyBindingResult(dto, "dto");
 
         ValidationUtils.invokeValidator(validator, dto, errors);
@@ -93,7 +102,10 @@ class CreateTaskParametersDTOValidatorTest {
                 existingFolder,
                 "U:\\destNotExistButIsOkPathVariable",
                 "glob:\\d+",
-                "COPY");
+                "COPY",
+                "NICE_LOOKING_FILENAME",
+                null,
+                null);
     }
 
 
