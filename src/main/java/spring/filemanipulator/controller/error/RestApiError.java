@@ -45,42 +45,6 @@ public class RestApiError {
         statusError = httpStatus.getReasonPhrase();
     }
 
-    public static RestApiError fromDefaultAttributeMap(
-            final Map<String, Object> defaultAttributeMap
-    ) {
-        if (isAttributeMapValid(defaultAttributeMap)) {
-            Integer statusCode = (Integer) defaultAttributeMap.get("status");
-            HttpStatus httpStatus = HttpStatus.valueOf(statusCode);
-
-            RestApiError restApiError = new RestApiError(httpStatus);
-            restApiError.setErrorMessage((String) defaultAttributeMap.getOrDefault("message", "No message available."));
-            restApiError.setErrorMessageDetail((String) defaultAttributeMap.getOrDefault("trace", "No error available."));
-            restApiError.setApiPath((String) defaultAttributeMap.getOrDefault("path", "No path available."));
-            return restApiError;
-        } else {
-            RestApiError restApiError = new RestApiError(HttpStatus.INTERNAL_SERVER_ERROR);
-            restApiError.setErrorMessage("Unexpected DefaultAttributeMap format!");
-            restApiError.setErrorMessageDetail(defaultAttributeMap.toString());
-            restApiError.setApiPath((String) defaultAttributeMap.getOrDefault("path", "No path available."));
-            return restApiError;
-        }
-    }
-
-    private static boolean isAttributeMapValid(Map<String, Object> attributeMap) {
-        try {
-            Object statusCodeValue = attributeMap.get("status");
-            Integer statusCode = (Integer) (statusCodeValue); // ClassCastException, NullPointerException
-            return isValueInHttpCodeRange(statusCode);
-        } catch (ClassCastException | NullPointerException | IllegalArgumentException ex) {
-            return false;
-        }
-    }
-
-    // TODO determine when and why this works when it should noy
-    private static boolean isValueInHttpCodeRange(int statusCode) {
-        return statusCode >= HTTP_CODE_MAX_VALUE && statusCode <= HTTP_CODE_MAX_VALUE;
-    }
-
     public Map<String, Object> toAttributeMap() {
         Map<String, Object> linkedMap = new LinkedHashMap<>();
         linkedMap.put("timestamp", timestamp);
