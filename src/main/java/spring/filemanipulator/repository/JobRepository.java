@@ -5,5 +5,5 @@ import spring.filemanipulator.entity.JobEntity;
 
 
 @Repository
-public interface JobRepository extends AbstractRepository<JobEntity, Integer> {
+public interface JobRepository extends AbstractSearchableRepository<JobEntity, Integer> {
 }
