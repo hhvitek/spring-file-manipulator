@@ -21,7 +21,7 @@ public interface JobScheduler {
      * After a Job finishes it's execution, it is silently released from a JobScheduler.
      * Therefore only recently created, scheduled or running Jobs return true...
      */
-    boolean isScheduledOrRunning(int jobId);
+    boolean isCreatedOrScheduledOrRunning(int jobId);
 
 
     /**
