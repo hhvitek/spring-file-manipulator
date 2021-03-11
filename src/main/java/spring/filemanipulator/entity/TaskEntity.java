@@ -70,13 +70,10 @@ public class TaskEntity extends AbstractTimestampEntity implements Serializable 
      *
      * This can easily be implemented as a foreign key or as a join table.
      */
-
-    /*
-     * USING a join table
-    */
-    @JsonIgnoreProperties({"hibernate_lazy_initializer"})
+    @JsonIgnoreProperties({"hibernate_lazy_initializer"}) // remove empty JSON key-value added by Jackson--when lazy initialized
     @Builder.Default
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY) // cannot cascade we want NONE to cascade, Task should only READ never write,
+                                      // JobScheduler is handling Job DB statuses changes itself, no one else...
     @JoinTable(
             name = "task_to_scheduled_job_mapping",
             joinColumns =
@@ -106,5 +103,10 @@ public class TaskEntity extends AbstractTimestampEntity implements Serializable 
 
     public void increaseProcessedFilesByOne() {
         processedFileCount++;
+    }
+
+    public void setErrorMsgAndHasErrorFlag(String errorMsg) {
+        this.errorMsg = errorMsg;
+        this.hasError = true;
     }
 }
