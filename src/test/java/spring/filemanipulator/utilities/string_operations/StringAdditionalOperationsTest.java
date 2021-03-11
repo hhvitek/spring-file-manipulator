@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public abstract class  StringAdditionalOperationsTest {
 
-    StringAdditionalOperations additionalOperations;
+    protected StringAdditionalOperations additionalOperations;
 
     @Test
     void squeezeAllSpacesTest() {
