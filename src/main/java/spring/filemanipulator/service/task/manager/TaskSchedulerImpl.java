@@ -5,14 +5,17 @@ import org.springframework.stereotype.Service;
 import spring.filemanipulator.entity.JobEntity;
 import spring.filemanipulator.entity.TaskEntity;
 import spring.filemanipulator.repository.TaskRepository;
+import spring.filemanipulator.service.job.Job;
+import spring.filemanipulator.service.job.JobAlreadyFinishedException;
 import spring.filemanipulator.service.job.JobNotFoundException;
 import spring.filemanipulator.service.job.JobService;
+import spring.filemanipulator.service.task.TaskAlreadyFinishedException;
 import spring.filemanipulator.service.task.TaskNotFoundException;
 import spring.filemanipulator.service.task.TaskNotScheduledException;
 
 @Service
 public class TaskSchedulerImpl implements TaskScheduler {
-    private final TaskJobFactoryImpl taskJobFactoryImpl;
+    private final TaskJobFactory taskJobFactory;
 
     private final JobService jobService;
 
@@ -20,40 +23,39 @@ public class TaskSchedulerImpl implements TaskScheduler {
 
 
     @Autowired
-    public TaskSchedulerImpl(TaskJobFactoryImpl taskJobFactoryImpl, JobService jobService, TaskRepository taskRepository) {
-        this.taskJobFactoryImpl = taskJobFactoryImpl;
+    public TaskSchedulerImpl(TaskJobFactory taskJobFactory, JobService jobService, TaskRepository taskRepository) {
+        this.taskJobFactory = taskJobFactory;
         this.jobService = jobService;
         this.taskRepository = taskRepository;
     }
 
     @Override
     public void scheduleAndStore(TaskEntity createdTaskEntity) {
-        TaskJobImpl taskJobImpl = taskJobFactoryImpl.createTaskJobByTaskEntity(createdTaskEntity);
+        Job taskJob = taskJobFactory.createTaskJobByTaskEntity(createdTaskEntity);
 
-        JobEntity jobEntity = jobService.createAndSchedule(taskJobImpl);
+        JobEntity jobEntity = jobService.createAndSchedule(taskJob);
 
         createdTaskEntity.setJobEntity(jobEntity);
         taskRepository.save(createdTaskEntity);
     }
 
-    /**
-     * @param taskId
-     * @throws TaskNotFoundException
-     * @throws TaskNotScheduledException Simply put a Task has not yet been scheduled, therefore it cannot be stopped.
-     * There is a Task record (TaskEntity) in DB, but no related Job record (JobEntity).
-     * The JobEntity record is always created when a new Job is scheduled.
-     *
-     * @throws JobNotFoundException This should never happen. Indicates DB inconsistency.
-     * Mapping TaskEntity <-> JobEntity corrupted.
-     */
     @Override
-    public void signalToStop(int taskId) throws TaskNotFoundException, TaskNotScheduledException, JobNotFoundException {
+    public void signalToStopThrow(int taskId) throws TaskNotFoundException, TaskNotScheduledException, TaskAlreadyFinishedException, JobNotFoundException {
         TaskEntity taskEntity = taskRepository.findByIdIfNotFoundThrow(taskId);
 
         // on success should ensure that there is "related" Job
         int jobId = taskEntity.getJobIdIfNotScheduledThrow();
 
         // If this throws -> Database is corrupted. There should never be Job without Task in DB
-        jobService.signalToStopIfNotFoundThrow(jobId);
+        // TODO new DBinconsistency exception?
+        signalJobToStopThrowOnNotFoundOrAlreadyFinished(jobId, taskId);
+    }
+
+    private void signalJobToStopThrowOnNotFoundOrAlreadyFinished(int jobId, int taskId) throws JobNotFoundException, TaskAlreadyFinishedException {
+        try {
+            jobService.signalToStopIfNotFoundThrow(jobId);
+        } catch (JobAlreadyFinishedException ex) {
+            throw new TaskAlreadyFinishedException(taskId);
+        }
     }
 }
