@@ -554,6 +554,96 @@ To get rid of hibernate_lazy_initializer property, use special annotaiton:
 >@JsonIgnoreProperties({"hibernate_lazy_initializer"}) 
 
 
+## Spring events - Observer pattern
+
+***ApplicationEventPublisher*** allow an Object to publish events.
+
+1. Let's define a custom event object containing all relevant data for all custom events.
+```java
+public class CustomEvent {
+    public enum EventType {
+        EVENT_TYPE_1,
+        EVENT_TYPE_2
+    }
+    
+    private EventType eventType;
+    private CustomObject1 customObject1;
+    // ... others
+    
+    public CustomEvent(EventType eventType) {
+        // ...
+    }
+    // ... other custructors, setters and getters
+}
+```
+
+2. We use ***eventPublisher*** in Spring like this:
+```java
+// ...
+ApplicationEventPublisher eventPublisher;
+// ...
+CustomEvent event = new CustomEvent(EventType.EVENT_TYPE_1);
+event.setXXX();
+eventPublisher.publishEvent(event);
+// ..
+```
+
+3. To listen to custom events we need to implement event listener.
+This is achieved just by adding
+   - ***@EventListener*** annotation to method
+   - Proper method parameter ***CustomEvent***
+```java
+public class CustomEventListener {
+
+    @EventListener
+    public handleCustomEvents(CustomEvent event) {
+        EventType type = event.getEventType();
+        // ...
+    }
+}
+```
+
+4. If we want to handle events asynchronously...
+   (No incoming event handling ORDER). Event1 may come
+   first, but it's handling may finished the last.
+```java
+public class CustomEventListener {
+
+    @Async
+    @EventListener
+    public handleCustomEvents(CustomEvent event) {
+        EventType type = event.getEventType();
+        // ...
+    }
+}
+```
+
+5. We have async event handling, but only in ONE background thread.
+Effectively achieving one-by-one event handling.
+```java
+public class CustomEventListener {
+    @Bean(name = "customObjectListenerAsync")
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1); // queuing all event handling
+        executor.setThreadNamePrefix("customEventListener-");
+        executor.initialize();
+        log.debug("taskListener: corePoolSize-{}, maxPoolSize-{}",
+                executor.getCorePoolSize(),
+                executor.getMaxPoolSize());
+        return executor;
+    }
+
+    @Async("customEventListenerAsync")
+    @EventListener
+    public handleCustomEvents(CustomEvent event) {
+        EventType type = event.getEventType();
+        // ...
+    }
+}
+```
+
 # Database
 
 Sqlite has been chosen.
