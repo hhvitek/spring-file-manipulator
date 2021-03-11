@@ -32,9 +32,6 @@ public class JobSchedulerImpl implements JobScheduler {
         this.jobRepository = jobRepository;
 
         threadPoolTaskExecutor = getThreadPoolTaskExecutor();
-
-        // Runnable scheduledRepeatedTaskRunnable = this::scheduledRepeatedTask;
-        // threadPoolTaskScheduler.scheduleWithFixedDelay(scheduledRepeatedTaskRunnable, SCHEDULED_REPEATABLE_DELAY_IN_MILLIS);
     }
 
     /**
@@ -127,13 +124,13 @@ public class JobSchedulerImpl implements JobScheduler {
     }
 
     @Override
-    public boolean isScheduledOrRunning(int jobId) {
+    public boolean isCreatedOrScheduledOrRunning(int jobId) {
         return runningJobs.contains(jobId);
     }
 
     @Override
     public void signalToStop(int jobId) {
-        if (isScheduledOrRunning(jobId)) {
+        if (isCreatedOrScheduledOrRunning(jobId)) {
             runningJobs.stop(jobId);
             runningJobs.delete(jobId);
             // Does it to make sense to set Job status to STOP here
@@ -151,23 +148,5 @@ public class JobSchedulerImpl implements JobScheduler {
 
             setNewJobStatusAndStoreIntoDb(jobEntity, JobStatusEnum.SIGNALED_TO_STOP);
         }
-    }
-
-    /**
-     * Repeatable scheduled task, anything???
-     */
-    private void scheduledRepeatedTask() {
-        log.debug("Scheduled Tasks repeatable thread executed!!!! Nothing happened...");
-
-        /*
-          synchronized (workerIdToOneWorkerItem) {
-            for (Map.Entry<Integer, ScheduledJobImpl> entry: workerIdToOneWorkerItem.entrySet()) {
-                Integer workerId = entry.getKey();
-                ScheduledJobImpl item = entry.getValue();
-
-                // do something
-            }
-        }
-        */
     }
 }
